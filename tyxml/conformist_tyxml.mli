@@ -1,5 +1,6 @@
 type ('e, 'meta, 'ty) field = 'e * ('meta, 'ty) Conformist.Field.t
 
+(*
 val custom :
   'a Conformist.decoder ->
   'a Conformist.encoder ->
@@ -10,12 +11,13 @@ val custom :
   ?validator:'a Conformist.validator ->
   string ->
   ('e, 'meta, 'a) field
+*)
 
 val text_input :
   ('a -> string) ->
   Html_types.input_type ->
   Html_types.input_attrib Tyxml.Html.attrib list ->
-  ?default:'a ->
+  ?prefill:'a ->
   ('meta, 'a) Conformist.Field.t ->
   ([> Html_types.input ] Tyxml.Html.elt, 'meta, 'a) field
 
@@ -27,6 +29,7 @@ val bool :
   ([> Html_types.input] Tyxml.Html.elt, 'meta, bool) field
 
 type ('e, 'meta, 'a) simple =
+  ?prefill:'a ->
   ?default:'a ->
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
@@ -39,6 +42,7 @@ val int : ([> Html_types.input] Tyxml.Html.elt, _, int) simple
 val string : ([> Html_types.input] Tyxml.Html.elt, _, string) simple
 val datetime : ([> Html_types.input] Tyxml.Html.elt, _, Ptime.t) simple
 
+(*
 type ('a, 'meta, 'ctor, 'ty) t
 
 val return : 'a -> ('a, _, 'ty, 'ty) t
@@ -53,3 +57,4 @@ val make :
   ('e, 'meta, 'ctor, 'ty) t ->
   'ctor ->
   'e * ('meta, 'ctor, 'ty) Conformist.t
+*)

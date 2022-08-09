@@ -10,6 +10,7 @@ module Make (I : module type of Conformist_tyxml) = struct
     div [txt "enter x: "; x; txt " and y: "; y],
     Conformist.(make Field.[xs; ys]) (fun x y -> {x; y})
 
+  (*
   let monadic =
     let open Tyxml.Html in
     make (
@@ -17,6 +18,7 @@ module Make (I : module type of Conformist_tyxml) = struct
       let< y = get (bool "y" ~default:true) in
       return (div [txt "enter x: "; x; txt " and y: "; y])
     ) (fun x y -> {x; y})
+  *)
 
   let run t =
     let f, sch = t in

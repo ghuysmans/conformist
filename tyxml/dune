@@ -1,5 +1,4 @@
 (executable
  (name main)
- (modules_without_implementation conformist_tyxml)
  (libraries conformist tyxml)
  (preprocess (pps ppx_deriving.show)))
