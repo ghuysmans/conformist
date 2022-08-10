@@ -1,4 +1,4 @@
-type ('e, 'attr, 'meta, 'ty) field
+type ('e, 'attr, 'kind, 'meta, 'ty) field
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
 
@@ -20,14 +20,14 @@ val text_input :
   Html_types.input_type ->
   ?prefill:'a ->
   ('meta, 'a) Conformist.Field.t ->
-  ([> Html_types.input ] Tyxml.Html.elt, input_attr, 'meta, 'a) field
+  ([> Html_types.input ] Tyxml.Html.elt, input_attr, [> `Required], 'meta, 'a) field
 
 val bool :
   ?default:bool ->
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
   string ->
-  ([> Html_types.input] Tyxml.Html.elt, input_attr, 'meta, bool) field
+  ([> Html_types.input] Tyxml.Html.elt, input_attr, [> `Bool], 'meta, bool) field
 
 val string_or_empty :
   ?prefill:string ->
@@ -35,30 +35,30 @@ val string_or_empty :
   ?msg:Conformist.error_msg ->
   ?validator:string Conformist.validator ->
   string ->
-  ([> Html_types.input] Tyxml.Html.elt, input_attr, 'meta, string) field
+  ([> Html_types.input] Tyxml.Html.elt, input_attr, [> `String_or_empty], 'meta, string) field
 
 val optional :
   ?meta:'meta ->
-  ('e, input_attr, 'meta, 'ty) field ->
-  ('e, input_attr, 'meta, 'ty option) field
+  ('e, input_attr, [`Required], 'meta, 'ty) field ->
+  ('e, input_attr, [> `Optional], 'meta, 'ty option) field
 
-type ('e, 'meta, 'a) simple =
+type ('e, 'kind, 'meta, 'a) simple =
   ?prefill:'a ->
   ?default:'a ->
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
   ?validator:'a Conformist.validator ->
   string ->
-  ('e, input_attr, 'meta, 'a) field
+  ('e, input_attr, 'kind, 'meta, 'a) field
 
-val float : ([> Html_types.input] Tyxml.Html.elt, _, float) simple
-val int : ([> Html_types.input] Tyxml.Html.elt, _, int) simple
-val string : ([> Html_types.input] Tyxml.Html.elt, _, string) simple
-val datetime : ([> Html_types.input] Tyxml.Html.elt, _, Ptime.t) simple
+val float : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, float) simple
+val int : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, int) simple
+val string : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, string) simple
+val datetime : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, Ptime.t) simple
 
 val render :
   ?attr:([> `Required] Tyxml.Html.attrib as 'attr) list ->
-  ('e, 'attr, 'meta, 'ty) field ->
+  ('e, 'attr, [> `Required], 'meta, 'ty) field ->
   'e * ('meta, 'ty) Conformist.Field.t
 
 (*

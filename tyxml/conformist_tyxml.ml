@@ -1,7 +1,7 @@
-type ('e, 'attr, 'meta, 'ty) field = {
+type ('e, 'attr, 'kind, 'meta, 'ty) field = {
   render: 'attr list -> 'e;
   field: ('meta, 'ty) Conformist.Field.t;
-  required: bool;
+  kind: 'kind;
 }
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
@@ -17,19 +17,19 @@ let text_input to_string input_type ?prefill field =
     in
     input ~a ()
   in
-  {render; field; required = true}
+  {render; field; kind = `Required}
 
-let optional ?meta {render; field; _} =
-  {render; field = Conformist.optional ~empty:true ?meta field; required = false}
+let optional ?meta {render; field; kind = `Required} =
+  {render; field = Conformist.optional ~empty:true ?meta field; kind = `Optional}
 
-type ('e, 'meta, 'a) simple =
+type ('e, 'kind, 'meta, 'a) simple =
   ?prefill:'a ->
   ?default:'a ->
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
   ?validator:'a Conformist.validator ->
   string ->
-  ('e, input_attr, 'meta, 'a) field
+  ('e, input_attr, 'kind, 'meta, 'a) field
 
 let bool ?default ?meta ?msg name =
   let render attr =
@@ -43,7 +43,7 @@ let bool ?default ?meta ?msg name =
     in
     input ~a ()
   in
-  {render; field = Conformist.bool ~default:false ?meta ?msg name; required = false}
+  {render; field = Conformist.bool ~default:false ?meta ?msg name; kind = `Bool}
 
 let float ?prefill ?default ?meta ?msg ?validator name =
   Conformist.(required_in_form (float ?default ?meta ?msg ?validator name)) |>
@@ -62,18 +62,17 @@ let string_or_empty ?prefill ?meta ?msg ?validator name =
     Conformist.(string ?meta ?msg ?validator name) |>
     text_input (fun x -> x) `Text ?prefill
   in
-  {t with required = false}
+  {t with kind = `String_or_empty}
 
 let datetime ?prefill ?default ?meta ?msg ?validator name =
   Conformist.(required_in_form (datetime ?default ?meta ?msg ?validator name)) |>
   text_input Ptime.to_rfc3339 `Datetime ?prefill
 
-let render ?(attr=[]) {render; field; required} =
+let render ?(attr=[]) {render; field; kind} =
   let attr =
-    if required then
-      Tyxml.Html.a_required () :: attr
-    else
-      attr
+    match kind with
+    | `Required -> Tyxml.Html.a_required () :: attr
+    | _ -> attr
   in
   render attr, field
 
