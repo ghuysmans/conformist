@@ -1,21 +1,25 @@
-type ('e, 'meta, 'ty) field = 'e * ('meta, 'ty) Conformist.Field.t
+type ('e, 'attr, 'meta, 'ty) field = {
+  render: 'attr list -> 'e;
+  field: ('meta, 'ty) Conformist.Field.t;
+}
 
-let prepend o l =
-  match o with
-  | None ->  l
-  | Some a -> a :: l
+type input_attr = Html_types.input_attrib Tyxml.Html.attrib
 
-let prepend_const b x l =
-  if b then x :: l else l
-
-let text_input to_string input_type attr ?prefill field =
-  let open Tyxml.Html in
-  let a =
-    (a_input_type input_type :: attr) |>
-    prepend (Option.map (fun x -> a_value (to_string x)) prefill) |>
-    prepend_const (not Conformist.Field.(is_optional (AnyField field))) (a_required ())
+let text_input to_string input_type ?prefill field =
+  let render attr =
+    let open Tyxml.Html in
+    let a =
+      (a_input_type input_type :: attr) |> fun l ->
+      match prefill with
+      | None ->  l
+      | Some x -> a_value (to_string x) :: l
+    in
+    input ~a ()
   in
-  input ~a (), field
+  {render; field}
+
+let optional ?meta {render; field} =
+  {render; field = Conformist.optional ~empty:true ?meta field}
 
 type ('e, 'meta, 'a) simple =
   ?prefill:'a ->
@@ -24,33 +28,46 @@ type ('e, 'meta, 'a) simple =
   ?msg:Conformist.error_msg ->
   ?validator:'a Conformist.validator ->
   string ->
-  ('e, 'meta, 'a) field
+  ('e, input_attr, 'meta, 'a) field
 
 let bool ?default ?meta ?msg name =
-  Tyxml.Html.(input ~a:(
-    a_input_type `Checkbox ::
-    a_value "true" ::
-    match default with
-    | Some true -> [a_checked ()]
-    | _ -> []
-  ) ()),
-  Conformist.bool ~default:false ?meta ?msg name
+  let render attr =
+    let open Tyxml.Html in
+    let a =
+      a_input_type `Checkbox ::
+      a_value "true" ::
+      match default with
+      | Some true -> a_checked () :: attr
+      | _ -> attr
+    in
+    input ~a ()
+  in
+  {render; field = Conformist.bool ~default:false ?meta ?msg name}
 
 let float ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.float ?default ?meta ?msg ?validator name |>
-  text_input string_of_float `Number [] ?prefill
+  Conformist.(required_in_form (float ?default ?meta ?msg ?validator name)) |>
+  text_input string_of_float `Number ?prefill
 
 let int ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.int ?default ?meta ?msg ?validator name |>
-  text_input string_of_int `Number [] ?prefill
+  Conformist.(required_in_form (int ?default ?meta ?msg ?validator name)) |>
+  text_input string_of_int `Number ?prefill
 
 let string ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.string ?default ?meta ?msg ?validator name |>
-  text_input (fun x -> x) `Text [] ?prefill
+  Conformist.(required_in_form (string ?default ?meta ?msg ?validator name)) |>
+  text_input (fun x -> x) `Text ?prefill
 
 let datetime ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.datetime ?default ?meta ?msg ?validator name |>
-  text_input Ptime.to_rfc3339 `Datetime [] ?prefill
+  Conformist.(required_in_form (datetime ?default ?meta ?msg ?validator name)) |>
+  text_input Ptime.to_rfc3339 `Datetime ?prefill
+
+let render ?(attr=[]) {render; field} =
+  let attr =
+    if Conformist.Field.(is_optional (AnyField field)) then
+      attr
+    else
+      Tyxml.Html.a_required () :: attr
+  in
+  render attr, field
 
 (*
 type ('a, 'meta, 'ctor, 'ty) t
