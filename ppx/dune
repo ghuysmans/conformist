@@ -1,0 +1,5 @@
+(library
+ (public_name ppx_conformist)
+ (kind ppx_rewriter)
+ (libraries ppxlib.traverse)
+ (preprocess (pps ppxlib.metaquot)))

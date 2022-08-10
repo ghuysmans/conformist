@@ -28,3 +28,10 @@ Arbitrary meta data can be stored in schemas which is useful to build functional
   (sexplib (and (>= v0.13.0) :with-test)))
  (conflicts
   (result (< 1.5))))
+
+(package
+ (name ppx_conformist)
+ (synopsis "Generate Conformist schemata from record types and enums")
+ (depends
+  (dune (>= 2.5))
+  conformist))
