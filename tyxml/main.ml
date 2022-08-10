@@ -1,10 +1,10 @@
-type t = {x: string option; y: bool} [@@deriving show]
+type t = {x: string; y: bool} [@@deriving show]
 
 open Conformist_tyxml
 
 let direct =
   let open Tyxml.Html in
-  let x, xs = render (optional (string ~meta:() "x")) in
+  let x, xs = render (string_or_empty ~meta:() "x") in
   let y, ys = render (bool "y" ~default:true) in
   div [txt "enter x: "; x; txt " and y: "; y],
   Conformist.(make Field.[xs; ys]) (fun x y -> {x; y})

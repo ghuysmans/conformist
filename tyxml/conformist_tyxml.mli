@@ -29,6 +29,14 @@ val bool :
   string ->
   ([> Html_types.input] Tyxml.Html.elt, input_attr, 'meta, bool) field
 
+val string_or_empty :
+  ?prefill:string ->
+  ?meta:'meta ->
+  ?msg:Conformist.error_msg ->
+  ?validator:string Conformist.validator ->
+  string ->
+  ([> Html_types.input] Tyxml.Html.elt, input_attr, 'meta, string) field
+
 val optional :
   ?meta:'meta ->
   ('e, input_attr, 'meta, 'ty) field ->

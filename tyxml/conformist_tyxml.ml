@@ -1,6 +1,7 @@
 type ('e, 'attr, 'meta, 'ty) field = {
   render: 'attr list -> 'e;
   field: ('meta, 'ty) Conformist.Field.t;
+  required: bool;
 }
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
@@ -16,10 +17,10 @@ let text_input to_string input_type ?prefill field =
     in
     input ~a ()
   in
-  {render; field}
+  {render; field; required = true}
 
-let optional ?meta {render; field} =
-  {render; field = Conformist.optional ~empty:true ?meta field}
+let optional ?meta {render; field; _} =
+  {render; field = Conformist.optional ~empty:true ?meta field; required = false}
 
 type ('e, 'meta, 'a) simple =
   ?prefill:'a ->
@@ -42,7 +43,7 @@ let bool ?default ?meta ?msg name =
     in
     input ~a ()
   in
-  {render; field = Conformist.bool ~default:false ?meta ?msg name}
+  {render; field = Conformist.bool ~default:false ?meta ?msg name; required = false}
 
 let float ?prefill ?default ?meta ?msg ?validator name =
   Conformist.(required_in_form (float ?default ?meta ?msg ?validator name)) |>
@@ -56,16 +57,23 @@ let string ?prefill ?default ?meta ?msg ?validator name =
   Conformist.(required_in_form (string ?default ?meta ?msg ?validator name)) |>
   text_input (fun x -> x) `Text ?prefill
 
+let string_or_empty ?prefill ?meta ?msg ?validator name =
+  let t =
+    Conformist.(string ?meta ?msg ?validator name) |>
+    text_input (fun x -> x) `Text ?prefill
+  in
+  {t with required = false}
+
 let datetime ?prefill ?default ?meta ?msg ?validator name =
   Conformist.(required_in_form (datetime ?default ?meta ?msg ?validator name)) |>
   text_input Ptime.to_rfc3339 `Datetime ?prefill
 
-let render ?(attr=[]) {render; field} =
+let render ?(attr=[]) {render; field; required} =
   let attr =
-    if Conformist.Field.(is_optional (AnyField field)) then
-      attr
-    else
+    if required then
       Tyxml.Html.a_required () :: attr
+    else
+      attr
   in
   render attr, field
 
