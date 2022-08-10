@@ -85,9 +85,10 @@ module type CONFORMIST = sig
     -> string
     -> ('b, 'a) Field.t
 
-  (** [optional ?meta field] turns a [field] into an optional field. If the
+  (** [optional ?empty ?meta field] turns a [field] into an optional field. If the
       field does not exist in the input data or if the associated value in the
-      input data is an empty list, the value is [None]. If the data is not
+      input data is an empty list, the value is [None]. [empty] associates [None]
+      with [[""]]. it is used by [Conformist_tyxml]. If the data is not
       provided in the input at all, no validation logic is executed.
 
       Example:
@@ -110,7 +111,7 @@ module type CONFORMIST = sig
         let validated = Conformist.validate [ "name", [ "Walter" ] ] in
         ()
       ]} *)
-  val optional : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
+  val optional : ?empty:bool -> ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
 
   (** [list ?default ?meta field] returns a field that decodes to a list of
       [field].
@@ -234,6 +235,10 @@ module type CONFORMIST = sig
     -> ?validator:Ptime.t validator
     -> string
     -> ('a, Ptime.t) Field.t
+
+  (** [required_in_form field] validates [field] as a required HTML input:
+      an empty string will fail. *)
+  val required_in_form : ('a, 't) Field.t -> ('a, 't) Field.t
 
   (** {1 Schema}
 
@@ -376,9 +381,11 @@ module Make (Error : ERROR) = struct
       make name meta decoder encoder default type_ validator false
     ;;
 
-    let make_optional ?meta field =
+    let make_optional ?(empty=false) ?meta field =
       let decoder strings =
         match field.decoder strings, strings with
+        (* A web browser sends an empty string for an empty field *)
+        | _, [""] when empty -> Ok None
         (* Decoding succeeds with nothing when no strings provided *)
         | _, [] -> Ok None
         | Ok result, _ -> Ok (Some result)
@@ -392,7 +399,7 @@ module Make (Error : ERROR) = struct
       let encoder a =
         match a with
         | Some a -> field.encoder a
-        | None -> [ "None" ]
+        | None -> if empty then [ "" ] else [ "None" ]
       in
       let default =
         match field.default with
@@ -401,6 +408,18 @@ module Make (Error : ERROR) = struct
       in
       make field.name meta decoder encoder default field.type_ validator true
     ;;
+
+    let required_in_form field =
+      let encoder x =
+        match field.encoder x with
+        | List.[] -> List.[ "" ]
+        | x -> x
+      in
+      let decoder = function
+        | List.[ "" ] -> field.decoder List.[]
+        | l -> field.decoder l
+      in
+      {field with encoder; decoder}
 
     let make_list ?default ?meta field =
       let decoder (l : string List.t) : ('a List.t, Error.error) result =
@@ -535,6 +554,7 @@ module Make (Error : ERROR) = struct
   let string = Field.make_string
   let date = Field.make_date
   let datetime = Field.make_datetime
+  let required_in_form = Field.required_in_form
 
   type ('meta, 'ctor, 'ty) t =
     { fields : ('meta, 'ctor, 'ty) Field.list
