@@ -69,11 +69,13 @@ let datetime ?prefill ?default ?meta ?msg ?validator name =
   text_input Ptime.to_rfc3339 `Datetime ?prefill
 
 let render ?(attr=[]) {render; field; kind} =
+  let open Tyxml.Html in
   let attr =
     match kind with
-    | `Required -> Tyxml.Html.a_required () :: attr
+    | `Required -> a_required () :: attr
     | _ -> attr
   in
+  let attr = a_name (Conformist.Field.(name (AnyField field))) :: attr in
   render attr, field
 
 (*

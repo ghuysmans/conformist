@@ -57,7 +57,7 @@ val string : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, string) sim
 val datetime : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, Ptime.t) simple
 
 val render :
-  ?attr:([> `Required] Tyxml.Html.attrib as 'attr) list ->
+  ?attr:([> `Required | `Name] Tyxml.Html.attrib as 'attr) list ->
   ('e, 'attr, [> `Required], 'meta, 'ty) field ->
   'e * ('meta, 'ty) Conformist.Field.t
 
