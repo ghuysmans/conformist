@@ -223,11 +223,19 @@ let generate_impl ~ctxt (_rec_flag, type_declarations) =
   | _ ->
     [Str.extension (Location.error_extensionf ~loc "ppx_conformist: unsupported")]
 
+let generate_intf ~ctxt (_rec_flag, _type_declarations) =
+  let _loc = Expansion_context.Deriver.derived_item_loc ctxt in
+  failwith "TODO"
+
 
 let impl_generator =
   Deriving.Generator.V2.make_noarg ~attributes ~deps:[] generate_impl
+
+let intf_generator =
+  Deriving.Generator.V2.make_noarg ~attributes ~deps:[] generate_intf
 
 let my_deriver =
   Deriving.add
     "conformist"
     ~str_type_decl:impl_generator
+    ~sig_type_decl:intf_generator
