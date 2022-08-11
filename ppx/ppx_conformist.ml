@@ -8,7 +8,7 @@ let append ~suffix txt =
   | _ -> txt ^ "_" ^ suffix
 
 let name_attr =
-  Attribute.(declare "name" Context.constructor_declaration)
+  Attribute.(declare "conformist.name" Context.constructor_declaration)
     Ast_pattern.(single_expr_payload (estring __))
     (fun x -> x)
 
@@ -60,7 +60,7 @@ let f_of_variant {txt; loc} l =
     [Str.extension ~loc e]
 
 let key_attr =
-  Attribute.(declare "key" Context.label_declaration)
+  Attribute.(declare "conformist.key" Context.label_declaration)
     Ast_pattern.(single_expr_payload (estring __))
     (fun x -> x)
 
@@ -96,32 +96,32 @@ let field_of_type loc = function
     Exp.extension
 
 let of_string_attr =
-  Attribute.(declare "of_string" Context.label_declaration)
+  Attribute.(declare "conformist.of_string" Context.label_declaration)
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
 let to_string_attr =
-  Attribute.(declare "to_string" Context.label_declaration)
+  Attribute.(declare "conformist.to_string" Context.label_declaration)
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
 let default_attr =
-  Attribute.(declare "default" Context.label_declaration)
+  Attribute.(declare "conformist.default" Context.label_declaration)
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
 let validator_attr =
-  Attribute.(declare "validator" Context.label_declaration)
+  Attribute.(declare "conformist.validator" Context.label_declaration)
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
 let meta_attr =
-  Attribute.(declare "meta" Context.label_declaration)
+  Attribute.(declare "conformist.meta" Context.label_declaration)
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
 let msg_attr =
-  Attribute.(declare "msg" Context.label_declaration)
+  Attribute.(declare "conformist.msg" Context.label_declaration)
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
@@ -190,7 +190,10 @@ let schema_of_record txt loc l =
       let app e attr =
         match Attribute.get attr ld with
         | None -> e
-        | Some x -> Exp.apply ~loc e [Labelled (Attribute.name attr), x]
+        | Some x ->
+          match String.split_on_char '.' (Attribute.name attr) with
+          | ["conformist"; name] -> Exp.apply ~loc e [Labelled name, x]
+          | _ -> assert false
       in
       let a = [default_attr; validator_attr; meta_attr; msg_attr] in
       [%expr
