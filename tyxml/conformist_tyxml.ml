@@ -6,6 +6,10 @@ type ('e, 'attr, 'kind, 'meta, 'ty) field = {
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
 
+let custom dec enc render kind ?default ?type_ ?meta ?validator name =
+  let field = Conformist.custom dec enc ?default ?type_ ?meta ?validator name in
+  {render; field; kind}
+
 let text_input to_string input_type ?prefill field =
   let render attr =
     let open Tyxml.Html in

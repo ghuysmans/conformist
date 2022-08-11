@@ -2,18 +2,17 @@ type ('e, 'attr, 'kind, 'meta, 'ty) field
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
 
-(*
 val custom :
   'a Conformist.decoder ->
   'a Conformist.encoder ->
-  ('a option -> 'e) ->
+  ('attr list -> 'e) ->
+  'kind ->
   ?default:'a ->
   ?type_:string ->
   ?meta:'meta ->
   ?validator:'a Conformist.validator ->
   string ->
-  ('e, 'meta, 'a) field
-*)
+  ('e, 'attr, 'kind, 'meta, 'a) field
 
 val text_input :
   ('a -> string) ->
