@@ -1,5 +1,5 @@
 type u = A | B | C [@@deriving show]
-type t = {x: string; y: bool; z: u} [@@deriving show]
+type t = {x: string; y: bool; z: u list} [@@deriving show]
 
 let u_of_string = function
   | "A" -> Ok A
@@ -18,9 +18,9 @@ let direct =
   let open Tyxml.Html in
   let x, xs = render (string_or_empty ~meta:() "x") in
   let y, ys = render (bool "y" ~default:true) in
-  let z, zs = render (radio u_of_string string_of_u [A;B;C] ~default:A "z") in
+  let z, zs = render (select_list u_of_string string_of_u ["", [A;B;C]] ~default:[A] "z") in
   form [
-    div (txt "enter x: " :: x :: txt " and y: " :: y :: txt " then choose z: " :: z);
+    div (txt "enter x: " :: x :: txt " and y: " :: y :: txt " then choose z: " :: [z]);
     button [txt "submit"];
   ],
   Conformist.(make Field.[xs; ys; zs]) (fun x y z -> {x; y; z})
@@ -49,7 +49,7 @@ let run t =
     )
   in
   match Conformist.decode sch params with
-  | Error _ -> prerr_endline "error"
+  | Error (f, _, e) -> Printf.eprintf "%s: %s\n" f e
   | Ok t -> print_endline (show t)
 
 let () = run direct

@@ -47,6 +47,40 @@ let radio of_string to_string l ?default ?type_ ?meta ?validator name =
   let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
   {render; field; kind = `Required}
 
+let select_list of_string to_string groups ?(default=[]) ?type_ ?meta ?validator name =
+  let render attr =
+    let open Tyxml.Html in
+    let options l =
+      option ~a:[a_value ""] (txt "") ::
+      List.map (fun x ->
+        let a =
+          if List.mem x default then
+            [a_selected ()]
+          else
+            []
+        in
+        option ~a (txt (to_string x))
+      ) l
+    in
+    select ~a:(a_multiple () :: attr) @@
+    match groups with
+    | ["", l] -> options l
+    | _ -> List.map (fun (label, l) -> optgroup ~label (options l)) groups
+  in
+  let dec l =
+    List.fold_right (fun x t ->
+      if x = "" then
+        t
+      else
+        Result.bind (of_string x) (fun x ->
+          Result.bind t (fun t -> Ok (x :: t))
+        )
+    ) l (Ok [])
+  in
+  let enc = List.map to_string in
+  let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
+  {render; field; kind = `Many}
+
 type ('e, 'kind, 'meta, 'a) simple =
   ?prefill:'a ->
   ?default:'a ->

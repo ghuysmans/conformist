@@ -26,6 +26,17 @@ val radio :
   string ->
   ([> Html_types.input ] Tyxml.Html.elt list, input_attr, [> `Required], 'meta, 'a) field
 
+val select_list :
+  (string -> ('a, Conformist.error_msg) result) ->
+  ('a -> string) ->
+  (string * 'a list) list ->
+  ?default:'a list ->
+  ?type_:string ->
+  ?meta:'meta ->
+  ?validator:'a list Conformist.validator ->
+  string ->
+  ([> Html_types.select ] Tyxml.Html.elt, Html_types.select_attrib Tyxml.Html.attrib, [> `Many], 'meta, 'a list) field
+
 val bool :
   ?default:bool ->
   ?meta:'meta ->
