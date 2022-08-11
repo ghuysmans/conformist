@@ -125,7 +125,7 @@ let msg_attr =
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
-let schema_of_record txt loc l =
+let schema_of_record loc l =
   let fields =
     List.map (fun ({pld_name = {txt; loc}; pld_type; _} as ld) ->
       let key =
@@ -191,7 +191,18 @@ let schema_of_record txt loc l =
       fields
       [%expr Conformist.Field.([])]
   in
-  let make = Exp.ident ~loc {txt = lident txt; loc} in
+  let make =
+    let bindings =
+      List.map (fun {pld_name = {txt; _}; _} ->
+        let lid = {txt = Lident txt; loc} in
+        lid, Exp.ident ~loc lid
+      ) l
+    in
+    Exp.record ~loc bindings None |>
+    List.fold_right (fun {pld_name = {txt; _}; _} body ->
+      Exp.fun_ ~loc Nolabel None (Pat.var ~loc {txt; loc}) body
+    ) l
+  in
   [%expr Conformist.make [%e t] [%e make]]
 
 let attributes = Attribute.[
@@ -213,7 +224,7 @@ let generate_impl ~ctxt (_rec_flag, type_declarations) =
     | Ptype_record fields, _ ->
       [%str
         let [%p mk_pat ~suffix:"schema" txt loc] =
-          [%e schema_of_record txt loc fields]]
+          [%e schema_of_record loc fields]]
     | Ptype_variant cases, _ ->
       f_of_variant ptype_name cases
     | _ ->
