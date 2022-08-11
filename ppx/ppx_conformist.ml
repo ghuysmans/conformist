@@ -2,10 +2,10 @@ open Ppxlib
 open Ast_helper
 
 let append ~suffix txt =
-  if txt = "t" then
-    suffix
-  else
-    txt ^ "_" ^ suffix
+  match txt, suffix with
+  | "t", _ -> suffix
+  | _, "" -> txt
+  | _ -> txt ^ "_" ^ suffix
 
 let name_attr =
   Attribute.(declare "name" Context.constructor_declaration)
@@ -125,7 +125,19 @@ let msg_attr =
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
-let schema_of_record loc l =
+let make_of_record loc l =
+  let bindings =
+    List.map (fun {pld_name = {txt; _}; _} ->
+      let lid = {txt = Lident txt; loc} in
+      lid, Exp.ident ~loc lid
+    ) l
+  in
+  Exp.record ~loc bindings None |>
+  List.fold_right (fun {pld_name = {txt; _}; _} body ->
+    Exp.fun_ ~loc Nolabel None (Pat.var ~loc {txt; loc}) body
+  ) l
+
+let schema_of_record txt loc l =
   let fields =
     List.map (fun ({pld_name = {txt; loc}; pld_type; _} as ld) ->
       let key =
@@ -191,19 +203,7 @@ let schema_of_record loc l =
       fields
       [%expr Conformist.Field.([])]
   in
-  let make =
-    let bindings =
-      List.map (fun {pld_name = {txt; _}; _} ->
-        let lid = {txt = Lident txt; loc} in
-        lid, Exp.ident ~loc lid
-      ) l
-    in
-    Exp.record ~loc bindings None |>
-    List.fold_right (fun {pld_name = {txt; _}; _} body ->
-      Exp.fun_ ~loc Nolabel None (Pat.var ~loc {txt; loc}) body
-    ) l
-  in
-  [%expr Conformist.make [%e t] [%e make]]
+  [%expr Conformist.make [%e t] [%e mk_id ~suffix:"" txt loc]]
 
 let attributes = Attribute.[
   T name_attr;
@@ -216,15 +216,23 @@ let attributes = Attribute.[
   T msg_attr;
 ]
 
-let generate_impl ~ctxt (_rec_flag, type_declarations) =
+let generate_impl ~ctxt (_rec_flag, type_declarations) with_make =
   let loc = Expansion_context.Deriver.derived_item_loc ctxt in
   match type_declarations with
   | [{ptype_name = {txt; _} as ptype_name; ptype_kind; ptype_manifest; _}] ->
     begin match ptype_kind, ptype_manifest with
     | Ptype_record fields, _ ->
-      [%str
-        let [%p mk_pat ~suffix:"schema" txt loc] =
-          [%e schema_of_record loc fields]]
+      let sig_ =
+        [%str
+          let [%p mk_pat ~suffix:"schema" txt loc] =
+            [%e schema_of_record txt loc fields]]
+      in
+      if with_make then
+        [%stri
+          let [%p mk_pat ~suffix:"" txt loc] =
+            [%e make_of_record loc fields]] :: sig_
+      else
+        sig_
     | Ptype_variant cases, _ ->
       f_of_variant ptype_name cases
     | _ ->
@@ -240,7 +248,8 @@ let generate_intf ~ctxt (_rec_flag, _type_declarations) =
 
 
 let impl_generator =
-  Deriving.Generator.V2.make_noarg ~attributes ~deps:[] generate_impl
+  let args = Deriving.Args.(empty +> flag "with_make") in
+  Deriving.Generator.V2.make ~attributes ~deps:[] args generate_impl
 
 let intf_generator =
   Deriving.Generator.V2.make_noarg ~attributes ~deps:[] generate_intf
