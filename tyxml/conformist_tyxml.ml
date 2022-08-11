@@ -24,6 +24,29 @@ let text_input to_string input_type ?prefill field =
 let optional ?meta {render; field; kind = `Required} =
   {render; field = Conformist.optional ~empty:true ?meta field; kind = `Optional}
 
+let radio of_string to_string l ?default ?type_ ?meta ?validator name =
+  let render attr =
+    let open Tyxml.Html in
+    List.map (fun x ->
+      let a =
+        a_input_type `Radio ::
+        a_value (to_string x) ::
+        match default with
+        | Some y when x = y -> a_checked () :: attr
+        | _ -> attr
+      in
+      input ~a ()
+    ) l
+  in
+  let dec = function
+    | [] | [""] -> Error "No value provided"
+    | [x] -> of_string x
+    | _ -> Error "Too many values provided"
+  in
+  let enc x = [to_string x] in
+  let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
+  {render; field; kind = `Required}
+
 type ('e, 'kind, 'meta, 'a) simple =
   ?prefill:'a ->
   ?default:'a ->

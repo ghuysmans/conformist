@@ -15,6 +15,17 @@ val text_input :
   ('meta, 'a) Conformist.Field.t ->
   ([> Html_types.input ] Tyxml.Html.elt, input_attr, [> `Required], 'meta, 'a) field
 
+val radio :
+  (string -> ('a, Conformist.error_msg) result) ->
+  ('a -> string) ->
+  'a list ->
+  ?default:'a ->
+  ?type_:string ->
+  ?meta:'meta ->
+  ?validator:'a Conformist.validator ->
+  string ->
+  ([> Html_types.input ] Tyxml.Html.elt list, input_attr, [> `Required], 'meta, 'a) field
+
 val bool :
   ?default:bool ->
   ?meta:'meta ->

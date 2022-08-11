@@ -1,4 +1,16 @@
-type t = {x: string; y: bool} [@@deriving show]
+type u = A | B | C [@@deriving show]
+type t = {x: string; y: bool; z: u} [@@deriving show]
+
+let u_of_string = function
+  | "A" -> Ok A
+  | "B" -> Ok B
+  | "C" -> Ok C
+  | _ -> Error "u_of_string"
+
+let string_of_u = function
+  | A -> "A"
+  | B -> "B"
+  | C -> "C"
 
 open Conformist_tyxml
 
@@ -6,8 +18,12 @@ let direct =
   let open Tyxml.Html in
   let x, xs = render (string_or_empty ~meta:() "x") in
   let y, ys = render (bool "y" ~default:true) in
-  div [txt "enter x: "; x; txt " and y: "; y],
-  Conformist.(make Field.[xs; ys]) (fun x y -> {x; y})
+  let z, zs = render (radio u_of_string string_of_u [A;B;C] ~default:A "z") in
+  form [
+    div (txt "enter x: " :: x :: txt " and y: " :: y :: txt " then choose z: " :: z);
+    button [txt "submit"];
+  ],
+  Conformist.(make Field.[xs; ys; zs]) (fun x y z -> {x; y; z})
 
 (*
 let monadic =
