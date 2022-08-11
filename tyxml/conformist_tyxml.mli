@@ -65,8 +65,8 @@ val string_or_empty :
 
 val optional :
   ?meta:'meta ->
-  ('e, input_attr, [`Required], 'meta, 'ty) field ->
-  ('e, input_attr, [> `Optional], 'meta, 'ty option) field
+  ('e, 'attr, [`Required], 'meta, 'ty) field ->
+  ('e, 'attr, [> `Optional], 'meta, 'ty option) field
 
 type ('e, 'kind, 'meta, 'a) simple =
   ?prefill:'a ->
