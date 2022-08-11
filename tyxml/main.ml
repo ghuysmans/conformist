@@ -1,5 +1,5 @@
 type u = A | B | C [@@deriving show]
-type t = {x: string; y: bool; z: u list} [@@deriving show]
+type t = {x: string; y: bool; z: u} [@@deriving show]
 
 let u_of_string = function
   | "A" -> Ok A
@@ -18,7 +18,7 @@ let direct =
   let open Tyxml.Html in
   let x, xs = render (string_or_empty ~meta:() "x") in
   let y, ys = render (bool "y" ~default:true) in
-  let z, zs = render (select_list u_of_string string_of_u ["", [A;B;C]] ~default:[A] "z") in
+  let z, zs = render (select_one u_of_string string_of_u ["", [A;B;C]] "z") in
   form [
     div (txt "enter x: " :: x :: txt " and y: " :: y :: txt " then choose z: " :: [z]);
     button [txt "submit"];

@@ -24,6 +24,11 @@ let text_input to_string input_type ?prefill field =
 let optional ?meta {render; field; kind = `Required} =
   {render; field = Conformist.optional ~empty:true ?meta field; kind = `Optional}
 
+let decode_choice of_string = function
+  | [] | [""] -> Error "No value provided"
+  | [x] -> of_string x
+  | _ -> Error "Too many values provided"
+
 let radio of_string to_string l ?default ?type_ ?meta ?validator name =
   let render attr =
     let open Tyxml.Html in
@@ -38,35 +43,38 @@ let radio of_string to_string l ?default ?type_ ?meta ?validator name =
       input ~a ()
     ) l
   in
-  let dec = function
-    | [] | [""] -> Error "No value provided"
-    | [x] -> of_string x
-    | _ -> Error "Too many values provided"
-  in
+  let dec = decode_choice of_string in
   let enc x = [to_string x] in
   let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
   {render; field; kind = `Required}
 
-let select_list of_string to_string groups ?(default=[]) ?type_ ?meta ?validator name =
-  let render attr =
-    let open Tyxml.Html in
-    let options l =
-      option ~a:[a_value ""] (txt "") ::
-      List.map (fun x ->
-        let a =
-          if List.mem x default then
-            [a_selected ()]
-          else
-            []
-        in
-        option ~a (txt (to_string x))
-      ) l
-    in
-    select ~a:(a_multiple () :: attr) @@
-    match groups with
-    | ["", l] -> options l
-    | _ -> List.map (fun (label, l) -> optgroup ~label (options l)) groups
+let render_select to_string default groups attr =
+  let open Tyxml.Html in
+  let options l =
+    option ~a:[a_value ""] (txt "") ::
+    List.map (fun x ->
+      let a =
+        if List.mem x default then
+          [a_selected ()]
+        else
+          []
+      in
+      option ~a (txt (to_string x))
+    ) l
   in
+  select ~a:attr @@
+  match groups with
+  | ["", l] -> options l
+  | _ -> List.map (fun (label, l) -> optgroup ~label (options l)) groups
+
+let select_one of_string to_string groups ?default ?type_ ?meta ?validator name =
+  let dec = decode_choice of_string in
+  let enc x = [to_string x] in
+  let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
+  let render = render_select to_string (Option.to_list default) groups in
+  {render; field; kind = `Required}
+
+let select_list of_string to_string groups ?(default=[]) ?type_ ?meta ?validator name =
   let dec l =
     List.fold_right (fun x t ->
       if x = "" then
@@ -79,6 +87,10 @@ let select_list of_string to_string groups ?(default=[]) ?type_ ?meta ?validator
   in
   let enc = List.map to_string in
   let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
+  let render attr =
+    render_select to_string default groups
+      (Tyxml.Html.a_multiple () :: attr)
+  in
   {render; field; kind = `Many}
 
 type ('e, 'kind, 'meta, 'a) simple =
