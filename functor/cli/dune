@@ -1,0 +1,4 @@
+(executable
+ (name main)
+ (libraries shared)
+ (preprocess (pps ppx_deriving.show)))

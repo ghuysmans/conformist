@@ -1,4 +1,3 @@
-(executable
- (name main)
- (libraries conformist tyxml)
- (preprocess (pps ppx_deriving.show)))
+(library
+ (name conformist_tyxml)
+ (libraries conformist tyxml))

@@ -1,0 +1,5 @@
+(executable
+ (name main)
+ (modes js)
+ (libraries shared js_of_ocaml-tyxml)
+ (preprocess (pps ppx_deriving.show js_of_ocaml-ppx)))

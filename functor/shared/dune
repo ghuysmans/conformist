@@ -1,0 +1,4 @@
+(library
+ (name shared)
+ (libraries conformist_tyxml)
+ (preprocess (pps ppx_deriving.show)))
