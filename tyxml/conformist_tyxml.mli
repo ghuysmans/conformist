@@ -11,7 +11,7 @@ val custom :
 val text_input :
   ('a -> string) ->
   Html_types.input_type ->
-  ?prefill:'a ->
+  ?default:'a ->
   ('meta, 'a) Conformist.Field.t ->
   ([> Html_types.input ] Tyxml.Html.elt, input_attr, [> `Required], 'meta, 'a) field
 
@@ -55,27 +55,21 @@ val bool :
   string ->
   ([> Html_types.input] Tyxml.Html.elt, input_attr, [> `Bool], 'meta, bool) field
 
-val string_or_empty :
-  ?prefill:string ->
-  ?meta:'meta ->
-  ?msg:Conformist.error_msg ->
-  ?validator:string Conformist.validator ->
-  string ->
-  ([> Html_types.input] Tyxml.Html.elt, input_attr, [> `String_or_empty], 'meta, string) field
-
 val optional :
   ?meta:'meta ->
   ('e, 'attr, [`Required], 'meta, 'ty) field ->
   ('e, 'attr, [> `Optional], 'meta, 'ty option) field
 
 type ('e, 'kind, 'meta, 'a) simple =
-  ?prefill:'a ->
   ?default:'a ->
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
   ?validator:'a Conformist.validator ->
   string ->
   ('e, input_attr, 'kind, 'meta, 'a) field
+
+val string_or_empty :
+  ([> Html_types.input] Tyxml.Html.elt, [> `String_or_empty], _, string) simple
 
 val float : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, float) simple
 val int : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, int) simple

@@ -8,12 +8,12 @@ type input_attr = Html_types.input_attrib Tyxml.Html.attrib
 
 let custom render kind field = {render; field; kind}
 
-let text_input to_string input_type ?prefill field =
+let text_input to_string input_type ?default field =
   let render attr =
     let open Tyxml.Html in
     let a =
       (a_input_type input_type :: attr) |> fun l ->
-      match prefill with
+      match default with
       | None ->  l
       | Some x -> a_value (to_string x) :: l
     in
@@ -94,7 +94,6 @@ let select_list of_string to_string groups ?(default=[]) ?type_ ?meta ?validator
   {render; field; kind = `Many}
 
 type ('e, 'kind, 'meta, 'a) simple =
-  ?prefill:'a ->
   ?default:'a ->
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
@@ -116,28 +115,28 @@ let bool ?default ?meta ?msg name =
   in
   {render; field = Conformist.bool ~default:false ?meta ?msg name; kind = `Bool}
 
-let float ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.(required_in_form (float ?default ?meta ?msg ?validator name)) |>
-  text_input string_of_float `Number ?prefill
+let float ?default ?meta ?msg ?validator name =
+  Conformist.(required_in_form (float ?meta ?msg ?validator name)) |>
+  text_input string_of_float `Number ?default
 
-let int ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.(required_in_form (int ?default ?meta ?msg ?validator name)) |>
-  text_input string_of_int `Number ?prefill
+let int ?default ?meta ?msg ?validator name =
+  Conformist.(required_in_form (int ?meta ?msg ?validator name)) |>
+  text_input string_of_int `Number ?default
 
-let string ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.(required_in_form (string ?default ?meta ?msg ?validator name)) |>
-  text_input (fun x -> x) `Text ?prefill
+let string ?default ?meta ?msg ?validator name =
+  Conformist.(required_in_form (string ?meta ?msg ?validator name)) |>
+  text_input (fun x -> x) `Text ?default
 
-let string_or_empty ?prefill ?meta ?msg ?validator name =
+let string_or_empty ?default ?meta ?msg ?validator name =
   let t =
     Conformist.(string ?meta ?msg ?validator name) |>
-    text_input (fun x -> x) `Text ?prefill
+    text_input (fun x -> x) `Text ?default
   in
   {t with kind = `String_or_empty}
 
-let datetime ?prefill ?default ?meta ?msg ?validator name =
-  Conformist.(required_in_form (datetime ?default ?meta ?msg ?validator name)) |>
-  text_input Ptime.to_rfc3339 `Datetime ?prefill
+let datetime ?default ?meta ?msg ?validator name =
+  Conformist.(required_in_form (datetime ?meta ?msg ?validator name)) |>
+  text_input Ptime.to_rfc3339 `Datetime ?default
 
 let render ?(attr=[]) {render; field; kind} =
   let open Tyxml.Html in
