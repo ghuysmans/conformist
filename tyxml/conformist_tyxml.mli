@@ -16,9 +16,16 @@ val text_input :
   ('meta, 'a) Conformist.Field.t ->
   ([> Html_types.input ] Tyxml.Html.elt, input_attr, [> `Required], 'meta, 'a) field
 
+type choice = {
+  value: string;
+  label: string;
+}
+
+val map_choice : ('a -> string) -> 'a -> choice
+
 type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
   (string -> ('item, Conformist.error_msg) result) ->
-  ('item -> string) ->
+  ('item -> choice) ->
   'sugg list ->
   ?default:'a ->
   ?type_:string ->
