@@ -1,6 +1,7 @@
 type ('e, 'attr, 'kind, 'meta, 'ty) field
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
+type select_attr = Html_types.select_attrib Tyxml.Html.attrib
 
 val custom :
   ('attr list -> 'e) ->
@@ -15,38 +16,28 @@ val text_input :
   ('meta, 'a) Conformist.Field.t ->
   ([> Html_types.input ] Tyxml.Html.elt, input_attr, [> `Required], 'meta, 'a) field
 
-val radio :
-  (string -> ('a, Conformist.error_msg) result) ->
-  ('a -> string) ->
-  'a list ->
+type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
+  (string -> ('item, Conformist.error_msg) result) ->
+  ('item -> string) ->
+  'sugg list ->
   ?default:'a ->
   ?type_:string ->
   ?meta:'meta ->
   ?validator:'a Conformist.validator ->
   string ->
-  ([> Html_types.input ] Tyxml.Html.elt list, input_attr, [> `Required], 'meta, 'a) field
+  ('e, 'attr, 'kind, 'meta, 'a) field
+
+val radio :
+  ([> Html_types.input ] Tyxml.Html.elt list, input_attr, [> `Required],
+   'a, 'a, 'meta, 'a) complex
 
 val select_one :
-  (string -> ('a, Conformist.error_msg) result) ->
-  ('a -> string) ->
-  (string * 'a list) list ->
-  ?default:'a ->
-  ?type_:string ->
-  ?meta:'meta ->
-  ?validator:'a Conformist.validator ->
-  string ->
-  ([> Html_types.select ] Tyxml.Html.elt, Html_types.select_attrib Tyxml.Html.attrib, [> `Required], 'meta, 'a) field
+  ([> Html_types.select ] Tyxml.Html.elt, select_attr, [> `Required],
+   'a, string * 'a list, 'meta, 'a) complex
 
 val select_list :
-  (string -> ('a, Conformist.error_msg) result) ->
-  ('a -> string) ->
-  (string * 'a list) list ->
-  ?default:'a list ->
-  ?type_:string ->
-  ?meta:'meta ->
-  ?validator:'a list Conformist.validator ->
-  string ->
-  ([> Html_types.select ] Tyxml.Html.elt, Html_types.select_attrib Tyxml.Html.attrib, [> `Many], 'meta, 'a list) field
+  ([> Html_types.select ] Tyxml.Html.elt, select_attr, [> `Many],
+   'a, string * 'a list, 'meta, 'a list) complex
 
 val bool :
   ?default:bool ->

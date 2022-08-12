@@ -5,6 +5,7 @@ type ('e, 'attr, 'kind, 'meta, 'ty) field = {
 }
 
 type input_attr = Html_types.input_attrib Tyxml.Html.attrib
+type select_attr = Html_types.select_attrib Tyxml.Html.attrib
 
 let custom render kind field = {render; field; kind}
 
@@ -28,6 +29,17 @@ let decode_choice of_string = function
   | [] | [""] -> Error "No value provided"
   | [x] -> of_string x
   | _ -> Error "Too many values provided"
+
+type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
+  (string -> ('item, Conformist.error_msg) result) ->
+  ('item -> string) ->
+  'sugg list ->
+  ?default:'a ->
+  ?type_:string ->
+  ?meta:'meta ->
+  ?validator:'a Conformist.validator ->
+  string ->
+  ('e, 'attr, 'kind, 'meta, 'a) field
 
 let radio of_string to_string l ?default ?type_ ?meta ?validator name =
   let render attr =
