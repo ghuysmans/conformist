@@ -26,7 +26,7 @@ module Make (H : Html_sigs.T) = struct
     let x, xs = render (string_or_empty ~meta:() "x") in
     let y, ys = render (bool "y" ~default:true) in
     let z, zs = render (select_one u_of_string (map_choice string_of_u) ["", [A;B;C]] "z") in
-    form @@ cl [
+    [
       div (cl (txt "enter x: " :: x :: txt " and y: " :: y :: txt " then choose z: " :: [z]));
       button (cl [txt "submit"]);
     ],

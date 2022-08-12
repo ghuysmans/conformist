@@ -9,7 +9,10 @@ module S = Shared.Make (H)
 
 let () =
   let f, sch = S.direct in
-  Format.printf "%a@." (Tyxml.Html.pp_elt ()) f;
+  let () =
+    let open Tyxml.Html in
+    Format.printf "%a@." (pp_elt ()) (form f)
+  in
   let params =
     Array.to_list Sys.argv |>
     List.tl |>
