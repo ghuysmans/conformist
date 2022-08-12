@@ -50,18 +50,21 @@ type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
   string ->
   ('e, 'attr, 'kind, 'meta, 'a) field
 
-let radio of_string to_choice l ?default ?type_ ?meta ?validator name =
+let radio ?(dir=`LTR) of_string to_choice l ?default ?type_ ?meta ?validator name =
   let render attr =
     let open Tyxml.Html in
     List.map (fun x ->
+      let {value; label = lbl} = to_choice x in
       let a =
         a_input_type `Radio ::
-        a_value (to_choice x).value ::
+        a_value value ::
         match default with
         | Some y when x = y -> a_checked () :: attr
         | _ -> attr
       in
-      input ~a ()
+      match dir with
+      | `LTR -> label [input ~a (); txt lbl]
+      | `RTL -> label [txt lbl; input ~a ()]
     ) l
   in
   let dec = decode_choice of_string in

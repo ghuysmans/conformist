@@ -35,7 +35,8 @@ type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
   ('e, 'attr, 'kind, 'meta, 'a) field
 
 val radio :
-  ([> Html_types.input ] Tyxml.Html.elt list, input_attr, [> `Required],
+  ?dir:[`LTR | `RTL] ->
+  ([> Html_types.label ] Tyxml.Html.elt list, input_attr, [> `Required],
    'a, 'a, 'meta, 'a) complex
 
 val select_one :
