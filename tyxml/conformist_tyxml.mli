@@ -1,7 +1,8 @@
+module Make (H : Html_sigs.T) : sig
 type ('e, 'attr, 'kind, 'meta, 'ty) field
 
-type input_attr = Html_types.input_attrib Tyxml.Html.attrib
-type select_attr = Html_types.select_attrib Tyxml.Html.attrib
+type input_attr = Html_types.input_attrib H.attrib
+type select_attr = Html_types.select_attrib H.attrib
 
 val custom :
   ('attr list -> 'e) ->
@@ -14,7 +15,7 @@ val text_input :
   Html_types.input_type ->
   ?default:'a ->
   ('meta, 'a) Conformist.Field.t ->
-  ([> Html_types.input ] Tyxml.Html.elt, input_attr, [> `Required], 'meta, 'a) field
+  ([> Html_types.input ] H.elt, input_attr, [> `Required], 'meta, 'a) field
 
 type choice = {
   value: string;
@@ -36,15 +37,15 @@ type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
 
 val radio :
   ?dir:[`LTR | `RTL] ->
-  ([> Html_types.label ] Tyxml.Html.elt list, input_attr, [> `Required],
+  ([> Html_types.label ] H.elt list, input_attr, [> `Required],
    'a, 'a, 'meta, 'a) complex
 
 val select_one :
-  ([> Html_types.select ] Tyxml.Html.elt, select_attr, [> `Required],
+  ([> Html_types.select ] H.elt, select_attr, [> `Required],
    'a, string * 'a list, 'meta, 'a) complex
 
 val select_list :
-  ([> Html_types.select ] Tyxml.Html.elt, select_attr, [> `Many],
+  ([> Html_types.select ] H.elt, select_attr, [> `Many],
    'a, string * 'a list, 'meta, 'a list) complex
 
 val bool :
@@ -52,7 +53,7 @@ val bool :
   ?meta:'meta ->
   ?msg:Conformist.error_msg ->
   string ->
-  ([> Html_types.input] Tyxml.Html.elt, input_attr, [> `Bool], 'meta, bool) field
+  ([> Html_types.input] H.elt, input_attr, [> `Bool], 'meta, bool) field
 
 val optional :
   ?meta:'meta ->
@@ -68,15 +69,15 @@ type ('e, 'kind, 'meta, 'a) simple =
   ('e, input_attr, 'kind, 'meta, 'a) field
 
 val string_or_empty :
-  ([> Html_types.input] Tyxml.Html.elt, [> `String_or_empty], _, string) simple
+  ([> Html_types.input] H.elt, [> `String_or_empty], _, string) simple
 
-val float : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, float) simple
-val int : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, int) simple
-val string : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, string) simple
-val datetime : ([> Html_types.input] Tyxml.Html.elt, [> `Required], _, Ptime.t) simple
+val float : ([> Html_types.input] H.elt, [> `Required], _, float) simple
+val int : ([> Html_types.input] H.elt, [> `Required], _, int) simple
+val string : ([> Html_types.input] H.elt, [> `Required], _, string) simple
+val datetime : ([> Html_types.input] H.elt, [> `Required], _, Ptime.t) simple
 
 val render :
-  ?attr:([> `Required | `Name] Tyxml.Html.attrib as 'attr) list ->
+  ?attr:([> `Required | `Name] H.attrib as 'attr) list ->
   ('e, 'attr, [> `Required], 'meta, 'ty) field ->
   'e * ('meta, 'ty) Conformist.Field.t
 
@@ -96,3 +97,4 @@ val make :
   'ctor ->
   'e * ('meta, 'ctor, 'ty) Conformist.t
 *)
+end

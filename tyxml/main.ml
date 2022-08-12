@@ -12,7 +12,13 @@ let string_of_u = function
   | B -> "B"
   | C -> "C"
 
-open Conformist_tyxml
+module H = struct
+  include Tyxml.Html
+  module Svg = Tyxml.Svg
+end
+
+module C = Conformist_tyxml.Make (H)
+open C
 
 let direct =
   let open Tyxml.Html in

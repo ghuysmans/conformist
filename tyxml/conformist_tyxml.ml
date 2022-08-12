@@ -1,22 +1,26 @@
+module Make (H : Html_sigs.T) = struct
 type ('e, 'attr, 'kind, 'meta, 'ty) field = {
   render: 'attr list -> 'e;
   field: ('meta, 'ty) Conformist.Field.t;
   kind: 'kind;
 }
 
-type input_attr = Html_types.input_attrib Tyxml.Html.attrib
-type select_attr = Html_types.select_attrib Tyxml.Html.attrib
+type input_attr = Html_types.input_attrib H.attrib
+type select_attr = Html_types.select_attrib H.attrib
+
+let ret = H.Xml.W.return
+let cl l = H.Xml.W.(List.fold_right (fun x t -> cons (return x) t) l (nil ()))
 
 let custom render kind field = {render; field; kind}
 
 let text_input to_string input_type ?default field =
   let render attr =
-    let open Tyxml.Html in
+    let open H in
     let a =
-      (a_input_type input_type :: attr) |> fun l ->
+      (a_input_type (ret input_type) :: attr) |> fun l ->
       match default with
       | None ->  l
-      | Some x -> a_value (to_string x) :: l
+      | Some x -> a_value (ret @@ to_string x) :: l
     in
     input ~a ()
   in
@@ -52,19 +56,19 @@ type ('e, 'attr, 'kind, 'item, 'sugg, 'meta, 'a) complex =
 
 let radio ?(dir=`LTR) of_string to_choice l ?default ?type_ ?meta ?validator name =
   let render attr =
-    let open Tyxml.Html in
+    let open H in
     List.map (fun x ->
       let {value; label = lbl} = to_choice x in
       let a =
-        a_input_type `Radio ::
-        a_value value ::
+        a_input_type (ret `Radio) ::
+        a_value (ret value) ::
         match default with
         | Some y when x = y -> a_checked () :: attr
         | _ -> attr
       in
       match dir with
-      | `LTR -> label [input ~a (); txt lbl]
-      | `RTL -> label [txt lbl; input ~a ()]
+      | `LTR -> label (cl [input ~a (); txt (ret lbl)])
+      | `RTL -> label (cl [txt (ret lbl); input ~a ()])
     ) l
   in
   let dec = decode_choice of_string in
@@ -73,25 +77,26 @@ let radio ?(dir=`LTR) of_string to_choice l ?default ?type_ ?meta ?validator nam
   {render; field; kind = `Required}
 
 let render_select to_choice default groups attr =
-  let open Tyxml.Html in
+  let open H in
   let options l =
-    option ~a:[a_value ""] (txt "") ::
+    cl @@
+    option ~a:[a_value (ret "")] (ret (txt (ret ""))) ::
     List.map (fun x ->
       let {value; label} = to_choice x in
       let a =
-        a_value value ::
+        a_value (ret value) ::
         if List.mem x default then
           [a_selected ()]
         else
           []
       in
-      option ~a (txt label)
+      option ~a (ret (txt (ret label)))
     ) l
   in
   select ~a:attr @@
   match groups with
   | ["", l] -> options l
-  | _ -> List.map (fun (label, l) -> optgroup ~label (options l)) groups
+  | _ -> cl @@ List.map (fun (label, l) -> optgroup ~label:(ret label) (options l)) groups
 
 let select_one of_string to_choice groups ?default ?type_ ?meta ?validator name =
   let dec = decode_choice of_string in
@@ -115,7 +120,7 @@ let select_list of_string to_choice groups ?(default=[]) ?type_ ?meta ?validator
   let field = Conformist.custom dec enc ?type_ ?meta ?validator name in
   let render attr =
     render_select to_choice default groups
-      (Tyxml.Html.a_multiple () :: attr)
+      (H.a_multiple () :: attr)
   in
   {render; field; kind = `Many}
 
@@ -129,10 +134,10 @@ type ('e, 'kind, 'meta, 'a) simple =
 
 let bool ?default ?meta ?msg name =
   let render attr =
-    let open Tyxml.Html in
+    let open H in
     let a =
-      a_input_type `Checkbox ::
-      a_value "true" ::
+      a_input_type (ret `Checkbox) ::
+      a_value (ret "true") ::
       match default with
       | Some true -> a_checked () :: attr
       | _ -> attr
@@ -165,13 +170,13 @@ let datetime ?default ?meta ?msg ?validator name =
   text_input Ptime.to_rfc3339 `Datetime ?default
 
 let render ?(attr=[]) {render; field; kind} =
-  let open Tyxml.Html in
+  let open H in
   let attr =
     match kind with
     | `Required -> a_required () :: attr
     | _ -> attr
   in
-  let attr = a_name (Conformist.Field.(name (AnyField field))) :: attr in
+  let attr = a_name (ret @@ Conformist.Field.(name (AnyField field))) :: attr in
   render attr, field
 
 (*
@@ -190,3 +195,4 @@ let make t f =
   let list, body = t Conformist.Field.[] in
   body, Conformist.make list f
 *)
+end
